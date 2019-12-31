@@ -1,11 +1,7 @@
 <?php
+
 defined('BASEPATH') OR exit('No direct script access allowed');
-//include rest controller
 
-//require APPPATH .'/libraries/REST_Controller.php';
-// require APPPATH.'/libraries/REST_Controller.php';
-
-//use chriskacerguis\RestServer\RestController;
 
 require_once("application/libraries/REST_Controller.php");
 require_once("application/libraries/Format.php");
@@ -69,26 +65,34 @@ class User extends REST_Controller
 		
 		$users_login= $this->user_model->getUsers($email,$password);
 
-		/*echo "<pre>";
-		var_dump($users_login);
-		die();*/
-		$user_data=array(
-			'id'=>$users_login['id'],
-			'username'=>$users_login['username'],
-			'email'=>$users_login['email'],
-			'mobile' =>$users_login['mobile'],
-			'passcode' =>$users_login['passcode']
+		
 
-		);
-
-
-		if(isset($user_data)){
+		if(!empty($users_login)) {
 			//set response and exit
 
+			
 
-			$this->response($user_data, REST_Controller:: HTTP_OK);
+			$this->response([
+			    
+			    'status'=>TRUE,
+			    'id'=>$users_login['id'],
+			    'username'=>$users_login['username'],
+			    'passcode'=>$users_login['passcode'],
+			    'email'=>$users_login['email'],
+			    'mobile'=>$users_login['mobile']
+			    
+			    
+			    ],REST_Controller:: HTTP_OK);
+			
+			
+			
 		}
+
 		else{
+
+
+
+			//$this->response($user_data, REST_Controller:: HTTP_BAD_REQUEST);
 
 			$this->response([
 				'status'=> FALSE,
@@ -100,7 +104,7 @@ class User extends REST_Controller
 	}
 
 
-
+/*
 	public function already_email_exists($email)
 	{
 
@@ -122,22 +126,24 @@ class User extends REST_Controller
 		}
 		
 	}
-
+*/
 
 	// To register your data into table
 	public function users_post()
 	{
 
-		if(empty($_POST)) {
-			    # Get JSON as a string
-			    $json_str = file_get_contents('php://input');
-			    # Get as an array
-			    $_POST = json_decode($json_str, true);
-				}
+			if(empty($_POST)) {
+				    # Get JSON as a string
+				    $json_str = file_get_contents('php://input');
+				    # Get as an array
+				    $_POST = json_decode($json_str, true);
+					}
+					
 
-			if($this->already_email_exists()){
+				if($this->already_email())
+				{
 
-				$user_responde_error= array(
+					$user_responde_error= array(
 					'status'=>false,
 					'message'=>'Email alreday exits',
 					//'username'=> $userdata['username']
@@ -146,7 +152,9 @@ class User extends REST_Controller
 				);
 
             print(json_encode($user_responde_error));
-			}
+            die();
+				}
+			
 
 
 		$userdata=array();
@@ -180,15 +188,12 @@ class User extends REST_Controller
 			if($insert)
 			{
 
-				$user_responde= array(
-					'status'=>TRUE,
-					'message'=>'registration',
-					'username'=> $userdata['username'],
-					
-
-
-				);
-
+			$this->response(
+					[
+						'status'=>TRUE,
+						'message' =>'Registration success..!!',	
+						'username'=> $userdata['username'],
+					], REST_Controller:: HTTP_OK);
 
 				/*$this->response(
 					[
@@ -202,15 +207,14 @@ class User extends REST_Controller
 
 
 
-				$user_responde_error= array(
-					'status'=>false,
-					'message'=>'Somethig went wrong',
-					//'username'=> $userdata['username']
+			$this->response(
+					[
+						'status'=>FALSE,
+						'message'=>'there some problem please try again.'
 
+					], REST_Controller:: HTTP_BAD_REQUEST);
 
-				);
-
-        print(json_encode($user_responde_error));
+       // print(json_encode($user_responde_error));
 
 			/*	$this->response(
 					[
@@ -221,14 +225,33 @@ class User extends REST_Controller
 
 			}
 
-			print(json_encode($user_responde));
+		//	print(json_encode($user_responde));
 
 
 		}
+
+
 	}
 
 
+	public function already_email(){
 
+		$email=$_POST['email'];
+		 $check = $this->user_model->mail_exists($email);
+
+			if($check)
+			{
+				return TRUE;
+			}
+			else{
+
+				return false;
+			}
+		}
+
+
+
+		
 	public function user_delete($id)
 	{
 		if($id){
@@ -264,7 +287,7 @@ class User extends REST_Controller
 
 
 
-		/*public function user_put($id)
+	/*	public function user_put($id)
 		{
 			$userdata=array();
 			$id= $this->put($id);
@@ -311,7 +334,7 @@ class User extends REST_Controller
 
 
 
-
+	
 
 
 
